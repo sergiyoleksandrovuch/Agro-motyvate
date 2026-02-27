@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>#Агро_мотивашка</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- Завантаження -->
+<div class="loading-overlay" id="loading">
+  <span class="spinner" style="width:40px;height:40px;border-width:4px;"></span>
+</div>
+
+<!-- Оверлей для мобільного меню -->
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<div class="app-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-mark">🌾</div>
+      <div>
+        <div class="brand-name">#Агро_<em>мотивашка</em></div>
+        <div class="brand-sub">ДДАЕУ</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav" id="sidebar-nav">
+      <div class="nav-group">Головне</div>
+
+      <a class="nav-link" data-page="dashboard" onclick="navigateTo('dashboard')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </a>
+
+      <a class="nav-link" data-page="new-activity" onclick="navigateTo('new-activity')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        Новий захід
+      </a>
+
+      <a class="nav-link" data-page="activities" onclick="navigateTo('activities')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        Мої заходи
+      </a>
+
+      <a class="nav-link" data-page="ranking" onclick="navigateTo('ranking')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Рейтинг
+      </a>
+
+      <!-- Верифікація — тільки для admin та verifier -->
+      <div id="nav-verify-section" style="display:none">
+        <div class="nav-group">Верифікація</div>
+        <a class="nav-link" data-page="verify" onclick="navigateTo('verify')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          На перевірку
+          <span class="nav-count" id="verify-count" style="display:none">0</span>
+        </a>
+      </div>
+
+      <!-- Адміністрування — тільки для admin -->
+      <div id="nav-admin-section" style="display:none">
+        <div class="nav-group">Адміністрування</div>
+        <a class="nav-link" data-page="users" onclick="navigateTo('users')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          Користувачі
+        </a>
+        <a class="nav-link" data-page="settings" onclick="navigateTo('settings')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09"/></svg>
+          Налаштування
+        </a>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="avatar" id="user-avatar">—</div>
+      <div style="flex:1;min-width:0;">
+        <div class="avatar-name" id="user-name">Завантаження...</div>
+        <div class="avatar-role" id="user-role"></div>
+      </div>
+      <button onclick="logout()" title="Вийти" style="background:none;border:none;cursor:pointer;padding:6px;border-radius:8px;color:var(--text-muted);">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-area">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="burger" onclick="openSidebar()">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <h1 class="topbar-title" id="page-title">Dashboard</h1>
+      </div>
+      <div class="topbar-right">
+        <!-- Тут можуть бути сповіщення, пошук тощо -->
+      </div>
+    </header>
+
+    <div class="page-area" id="page-content">
+      <!-- Сюди роутер вставляє вміст сторінки -->
+    </div>
+  </main>
+
+</div>
+
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+<!-- Ядро додатку -->
+<script src="js/config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/router.js"></script>
+
+<!-- Сторінки -->
+<script src="pages/dashboard.js"></script>
+<script src="pages/new-activity.js"></script>
+<script src="pages/activities.js"></script>
+<script src="pages/verify.js"></script>
+<script src="pages/ranking.js"></script>
+<script src="pages/users.js"></script>
+<script src="pages/settings.js"></script>
+
+<!-- Ініціалізація -->
+<script>
+var ROLE_LABELS = {
+  admin: 'Адміністратор',
+  verifier: 'Верифікатор',
+  rectorate: 'Ректорат',
+  participant: 'Учасник'
+};
+
+(async function init() {
+  // Перевірити авторизацію
+  var user = await checkAuth();
+
+  if (!user) {
+    window.location.href = 'index.html';
+    return;
+  }
+
+  // Зберегти користувача
+  currentUser = user;
+
+  // Оновити UI з даними користувача
+  var initials = user.full_name.split(' ').map(function(w) { return w[0]; }).join('').substring(0, 2);
+  document.getElementById('user-avatar').textContent = initials;
+  document.getElementById('user-name').textContent = user.full_name;
+
+  var roleName = ROLE_LABELS[user.role] || user.role;
+  var deptName = user.departments ? user.departments.short_name : '';
+  document.getElementById('user-role').textContent = roleName + (deptName ? ' · ' + deptName : '');
+
+  // Показати меню відповідно до ролі
+  if (user.role === 'admin' || user.role === 'verifier') {
+    document.getElementById('nav-verify-section').style.display = 'block';
+    // Завантажити кількість заходів на перевірку
+    loadVerifyCount();
+  }
+
+  if (user.role === 'admin') {
+    document.getElementById('nav-admin-section').style.display = 'block';
+  }
+
+  // Сховати завантаження
+  document.getElementById('loading').style.display = 'none';
+
+  // Перейти на потрібну сторінку
+  var startPage = getPageFromURL();
+  navigateTo(startPage);
+})();
+
+async function loadVerifyCount() {
+  var result = await db
+    .from('activities')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'submitted');
+
+  if (!result.error && result.count > 0) {
+    var badge = document.getElementById('verify-count');
+    badge.textContent = result.count;
+    badge.style.display = 'inline';
+  }
+}
+</script>
+</body>
+</html>
