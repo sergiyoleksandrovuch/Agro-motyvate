@@ -53,6 +53,18 @@
         Рейтинг
       </a>
 
+      <div class="nav-group">Показники</div>
+
+      <a class="nav-link" data-page="smm" onclick="navigateTo('smm')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+        SMM-метрики
+      </a>
+
+      <a class="nav-link" data-page="other-metrics" onclick="navigateTo('other-metrics')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+        Інші показники
+      </a>
+
       <!-- Верифікація — тільки для admin та verifier -->
       <div id="nav-verify-section" style="display:none">
         <div class="nav-group">Верифікація</div>
@@ -126,6 +138,8 @@
 <script src="pages/ranking.js"></script>
 <script src="pages/users.js"></script>
 <script src="pages/settings.js"></script>
+<script src="pages/smm.js"></script>
+<script src="pages/other-metrics.js"></script>
 
 <!-- Ініціалізація -->
 <script>
