@@ -1,4 +1,4 @@
-// pages/users.js — Управління користувачами (admin)
+// pages/users.js — Управління користувачами (admin) — оновлено
 
 registerPage('users', {
   render: function(user) {
@@ -13,6 +13,7 @@ registerPage('users', {
             '<h2 style="font-size:20px;">Користувачі</h2>' +
             '<p style="color:var(--text-muted);font-size:14px;">Управління акаунтами системи</p>' +
           '</div>' +
+          '<button class="btn btn-primary" onclick="openCreateUser()">+ Додати користувача</button>' +
         '</div>' +
         '<div id="users-list">Завантаження...</div>' +
       '</div>' +
@@ -33,6 +34,8 @@ registerPage('users', {
   }
 });
 
+var allDepartments = [];
+
 async function loadUsers() {
   var container = document.getElementById('users-list');
   if (!container) return;
@@ -43,6 +46,14 @@ async function loadUsers() {
     .from('profiles')
     .select('*, departments(name, short_name)')
     .order('full_name');
+
+  // Завантажити підрозділи для форм
+  var deptResult = await db.from('departments')
+    .select('id, name, short_name, type')
+    .eq('is_active', true)
+    .order('type, name');
+
+  allDepartments = deptResult.data || [];
 
   if (result.error) {
     container.innerHTML = '<div class="alert alert-error">Помилка: ' + result.error.message + '</div>';
@@ -95,23 +106,164 @@ async function loadUsers() {
   container.innerHTML = html;
 }
 
+function buildDeptOptions(selectedId) {
+  var options = '';
+  var currentGroup = '';
+  var typeLabels = { faculty: 'Факультети', department: 'Кафедри', unit: 'Інші' };
+
+  allDepartments.forEach(function(d) {
+    var groupLabel = typeLabels[d.type] || 'Інші';
+    if (groupLabel !== currentGroup) {
+      if (currentGroup) options += '</optgroup>';
+      options += '<optgroup label="' + groupLabel + '">';
+      currentGroup = groupLabel;
+    }
+    options += '<option value="' + d.id + '"' + (d.id === selectedId ? ' selected' : '') + '>' +
+      (d.short_name ? d.short_name + ' — ' : '') + d.name + '</option>';
+  });
+  if (currentGroup) options += '</optgroup>';
+  return options;
+}
+
+// === СТВОРЕННЯ НОВОГО КОРИСТУВАЧА ===
+
+function openCreateUser() {
+  var modal = document.getElementById('user-modal');
+  var content = document.getElementById('user-modal-content');
+  modal.style.display = 'block';
+
+  content.innerHTML = '<h3 style="font-size:18px;margin-bottom:20px;">Новий користувач</h3>' +
+
+    '<div class="form-group">' +
+      '<label class="form-label">Email (для входу в систему)</label>' +
+      '<input class="form-input" id="new-user-email" type="email" placeholder="example@dsaeu.edu.ua">' +
+    '</div>' +
+
+    '<div class="form-group">' +
+      '<label class="form-label">Пароль</label>' +
+      '<div style="display:flex;gap:8px;">' +
+        '<input class="form-input" id="new-user-password" type="text" value="" style="flex:1;">' +
+        '<button class="btn btn-secondary" onclick="generatePassword()" style="white-space:nowrap;font-size:12px;">Згенерувати</button>' +
+      '</div>' +
+      '<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Мінімум 6 символів. Передайте користувачу для входу.</div>' +
+    '</div>' +
+
+    '<div class="form-group">' +
+      '<label class="form-label">ПІБ</label>' +
+      '<input class="form-input" id="new-user-name" placeholder="Прізвище Ім\'я По-батькові">' +
+    '</div>' +
+
+    '<div class="form-group">' +
+      '<label class="form-label">Посада</label>' +
+      '<input class="form-input" id="new-user-position" placeholder="Доцент кафедри...">' +
+    '</div>' +
+
+    '<div class="form-group">' +
+      '<label class="form-label">Роль</label>' +
+      '<select class="form-input" id="new-user-role">' +
+        '<option value="participant">Учасник</option>' +
+        '<option value="verifier">Верифікатор</option>' +
+        '<option value="rectorate">Ректорат</option>' +
+        '<option value="admin">Адміністратор</option>' +
+      '</select>' +
+    '</div>' +
+
+    '<div class="form-group">' +
+      '<label class="form-label">Підрозділ</label>' +
+      '<select class="form-input" id="new-user-dept">' +
+        buildDeptOptions(null) +
+      '</select>' +
+    '</div>' +
+
+    '<div id="create-user-error" style="display:none;padding:10px;background:var(--red-soft);color:var(--red);border-radius:var(--r2);font-size:13px;margin-bottom:12px;"></div>' +
+    '<div id="create-user-success" style="display:none;padding:10px;background:var(--green-soft);color:var(--green);border-radius:var(--r2);font-size:13px;margin-bottom:12px;"></div>' +
+
+    '<div style="display:flex;gap:10px;margin-top:20px;">' +
+      '<button class="btn btn-primary" style="flex:1;" onclick="createUser()">Створити</button>' +
+      '<button class="btn btn-secondary" style="flex:1;" onclick="closeUserModal()">Скасувати</button>' +
+    '</div>';
+
+  generatePassword();
+}
+
+function generatePassword() {
+  var chars = 'abcdefghjkmnpqrstuvwxyz23456789';
+  var pass = '';
+  for (var i = 0; i < 8; i++) {
+    pass += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  document.getElementById('new-user-password').value = pass;
+}
+
+async function createUser() {
+  var email = document.getElementById('new-user-email').value.trim();
+  var password = document.getElementById('new-user-password').value;
+  var fullName = document.getElementById('new-user-name').value.trim();
+  var position = document.getElementById('new-user-position').value.trim();
+  var role = document.getElementById('new-user-role').value;
+  var departmentId = document.getElementById('new-user-dept').value;
+
+  var errorDiv = document.getElementById('create-user-error');
+  var successDiv = document.getElementById('create-user-success');
+  errorDiv.style.display = 'none';
+  successDiv.style.display = 'none';
+
+  if (!email || !password || !fullName) {
+    errorDiv.textContent = 'Заповніть email, пароль та ПІБ';
+    errorDiv.style.display = 'block';
+    return;
+  }
+
+  if (password.length < 6) {
+    errorDiv.textContent = 'Пароль має бути мінімум 6 символів';
+    errorDiv.style.display = 'block';
+    return;
+  }
+
+  // Викликаємо серверну функцію
+  var result = await db.rpc('admin_create_user', {
+    p_email: email,
+    p_password: password,
+    p_full_name: fullName,
+    p_position: position,
+    p_role: role,
+    p_department_id: departmentId
+  });
+
+  if (result.error) {
+    errorDiv.textContent = 'Помилка: ' + result.error.message;
+    errorDiv.style.display = 'block';
+    return;
+  }
+
+  var data = result.data;
+  if (data && data.error) {
+    errorDiv.textContent = data.error;
+    errorDiv.style.display = 'block';
+    return;
+  }
+
+  successDiv.innerHTML = 'Користувача створено! Дані для входу:<br>' +
+    'Email: <span style="font-weight:600;">' + email + '</span><br>' +
+    'Пароль: <span style="font-weight:600;">' + password + '</span>';
+  successDiv.style.display = 'block';
+
+  // Оновити список
+  await loadUsers();
+}
+
+// === РЕДАГУВАННЯ КОРИСТУВАЧА ===
+
 async function openEditUser(userId) {
   var modal = document.getElementById('user-modal');
   var content = document.getElementById('user-modal-content');
   modal.style.display = 'block';
   content.innerHTML = '<div style="text-align:center;padding:20px;"><span class="spinner"></span></div>';
 
-  // Завантажити профіль
   var userResult = await db.from('profiles')
     .select('*, departments(name, short_name)')
     .eq('id', userId)
     .single();
-
-  // Завантажити підрозділи
-  var deptResult = await db.from('departments')
-    .select('id, name, short_name, type')
-    .eq('is_active', true)
-    .order('type, name');
 
   if (userResult.error || !userResult.data) {
     content.innerHTML = '<div class="alert alert-error">Помилка завантаження</div>';
@@ -119,20 +271,6 @@ async function openEditUser(userId) {
   }
 
   var u = userResult.data;
-  var depts = deptResult.data || [];
-
-  var deptOptions = '';
-  var currentGroup = '';
-  depts.forEach(function(d) {
-    var groupLabel = d.type === 'faculty' ? 'Факультети' : (d.type === 'department' ? 'Кафедри' : 'Інші');
-    if (groupLabel !== currentGroup) {
-      if (currentGroup) deptOptions += '</optgroup>';
-      deptOptions += '<optgroup label="' + groupLabel + '">';
-      currentGroup = groupLabel;
-    }
-    deptOptions += '<option value="' + d.id + '"' + (d.id === u.department_id ? ' selected' : '') + '>' + (d.short_name || d.name) + ' — ' + d.name + '</option>';
-  });
-  if (currentGroup) deptOptions += '</optgroup>';
 
   content.innerHTML = '<h3 style="font-size:18px;margin-bottom:20px;">Редагувати користувача</h3>' +
 
@@ -159,7 +297,7 @@ async function openEditUser(userId) {
     '<div class="form-group">' +
       '<label class="form-label">Підрозділ</label>' +
       '<select class="form-input" id="edit-user-dept">' +
-        deptOptions +
+        buildDeptOptions(u.department_id) +
       '</select>' +
     '</div>' +
 

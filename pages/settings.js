@@ -1,4 +1,4 @@
-// pages/settings.js — Налаштування (admin)
+// pages/settings.js — Налаштування (admin) — оновлено
 
 registerPage('settings', {
   render: function(user) {
@@ -13,7 +13,6 @@ registerPage('settings', {
           '<p style="color:var(--text-muted);font-size:14px;">Ваги активностей та системні параметри</p>' +
         '</div>' +
 
-        // Tabs
         '<div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;" id="settings-tabs">' +
           '<button class="btn btn-secondary filter-active" onclick="settingsTab(\'weights\',this)" style="font-size:13px;padding:6px 14px;">Ваги активностей</button>' +
           '<button class="btn btn-secondary" onclick="settingsTab(\'departments\',this)" style="font-size:13px;padding:6px 14px;">Підрозділи</button>' +
@@ -22,9 +21,9 @@ registerPage('settings', {
         '<div id="settings-content">Завантаження...</div>' +
       '</div>' +
 
-      // Модальне вікно редагування ваги
+      // Модальне вікно
       '<div id="weight-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;padding:20px;overflow-y:auto;">' +
-        '<div style="max-width:480px;margin:40px auto;background:var(--bg-card);border-radius:var(--r4);padding:28px;position:relative;">' +
+        '<div style="max-width:520px;margin:40px auto;background:var(--bg-card);border-radius:var(--r4);padding:28px;position:relative;">' +
           '<button onclick="closeWeightModal()" style="position:absolute;top:12px;right:12px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-muted);">✕</button>' +
           '<div id="weight-modal-content"></div>' +
         '</div>' +
@@ -52,6 +51,8 @@ function settingsTab(tab, btn) {
   if (tab === 'departments') loadDepartmentsTab();
 }
 
+// === ВАГИ АКТИВНОСТЕЙ ===
+
 async function loadWeightsTab() {
   var container = document.getElementById('settings-content');
   if (!container) return;
@@ -70,7 +71,11 @@ async function loadWeightsTab() {
 
   var types = result.data || [];
 
-  var html = '<div class="card"><div class="card-body" style="padding:0;overflow-x:auto;">' +
+  var html = '<div style="display:flex;justify-content:flex-end;margin-bottom:12px;">' +
+    '<button class="btn btn-primary" onclick="openCreateActivityType()">+ Новий тип активності</button>' +
+  '</div>';
+
+  html += '<div class="card"><div class="card-body" style="padding:0;overflow-x:auto;">' +
     '<table style="width:100%;border-collapse:collapse;font-size:14px;">' +
       '<thead><tr style="border-bottom:2px solid var(--border);">' +
         '<th style="padding:12px 16px;text-align:left;font-weight:600;color:var(--text-muted);font-size:12px;">Тип активності</th>' +
@@ -79,6 +84,14 @@ async function loadWeightsTab() {
         '<th style="padding:12px 16px;text-align:center;font-weight:600;color:var(--text-muted);font-size:12px;">Активний</th>' +
         '<th style="padding:12px 16px;text-align:center;font-weight:600;color:var(--text-muted);font-size:12px;">Дії</th>' +
       '</tr></thead><tbody>';
+
+  var categoryLabels = {
+    field_visit: 'Виїзні зустрічі',
+    online: 'Онлайн',
+    internal: 'Внутрішні',
+    external_event: 'Зовнішні заходи',
+    other: 'Інше'
+  };
 
   types.forEach(function(t) {
     var multiplierText = '—';
@@ -92,7 +105,7 @@ async function loadWeightsTab() {
     html += '<tr style="border-bottom:1px solid var(--border-light);">' +
       '<td style="padding:12px 16px;">' +
         '<div style="font-weight:600;font-size:13px;">' + t.name + '</div>' +
-        '<div style="font-size:12px;color:var(--text-muted);">' + (t.category || '') + '</div>' +
+        '<div style="font-size:12px;color:var(--text-muted);">' + (categoryLabels[t.category] || t.category || '') + '</div>' +
       '</td>' +
       '<td style="padding:12px 16px;text-align:center;">' +
         '<span style="font-family:\'Plus Jakarta Sans\';font-weight:700;font-size:16px;color:var(--accent-deep);">' + t.base_weight + '</span>' +
@@ -110,6 +123,138 @@ async function loadWeightsTab() {
   html += '</tbody></table></div></div>';
   container.innerHTML = html;
 }
+
+// === СТВОРЕННЯ НОВОГО ТИПУ АКТИВНОСТІ ===
+
+function openCreateActivityType() {
+  var modal = document.getElementById('weight-modal');
+  var content = document.getElementById('weight-modal-content');
+  modal.style.display = 'block';
+
+  content.innerHTML = '<h3 style="font-size:18px;margin-bottom:20px;">Новий тип активності</h3>' +
+
+    '<div class="form-group">' +
+      '<label class="form-label">Назва</label>' +
+      '<input class="form-input" id="new-type-name" placeholder="Наприклад: Укладення меморандуму про співпрацю">' +
+    '</div>' +
+
+    '<div class="form-group">' +
+      '<label class="form-label">Опис/підказка</label>' +
+      '<input class="form-input" id="new-type-desc" placeholder="Короткий опис для підказки при виборі">' +
+    '</div>' +
+
+    '<div class="form-group">' +
+      '<label class="form-label">Категорія</label>' +
+      '<select class="form-input" id="new-type-category">' +
+        '<option value="field_visit">Виїзні зустрічі</option>' +
+        '<option value="online">Онлайн</option>' +
+        '<option value="internal">Внутрішні заходи</option>' +
+        '<option value="external_event">Зовнішні заходи</option>' +
+        '<option value="other">Інше</option>' +
+      '</select>' +
+    '</div>' +
+
+    '<div class="form-group">' +
+      '<label class="form-label">Базова вага (балів)</label>' +
+      '<input class="form-input" type="number" step="0.5" id="new-type-weight" value="5" min="0">' +
+    '</div>' +
+
+    '<div class="form-group">' +
+      '<label class="form-label">Чи потрібно вказувати заклад?</label>' +
+      '<select class="form-input" id="new-type-requires-inst">' +
+        '<option value="true">Так</option>' +
+        '<option value="false">Ні</option>' +
+      '</select>' +
+    '</div>' +
+
+    '<div class="form-group">' +
+      '<label class="form-label">Мультиплікатори за кількістю учасників</label>' +
+      '<div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">Залиште як є або змініть діапазони</div>' +
+      '<div id="new-type-ranges">' +
+        rangeInputRow(0, 1, 9, 1.0) +
+        rangeInputRow(1, 10, 19, 1.2) +
+        rangeInputRow(2, 20, '', 1.5) +
+      '</div>' +
+    '</div>' +
+
+    '<div style="display:flex;gap:10px;margin-top:20px;">' +
+      '<button class="btn btn-primary" style="flex:1;" onclick="createActivityType()">Створити</button>' +
+      '<button class="btn btn-secondary" style="flex:1;" onclick="closeWeightModal()">Скасувати</button>' +
+    '</div>';
+}
+
+function rangeInputRow(index, min, max, mult) {
+  return '<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">' +
+    '<input class="form-input" type="number" id="new-range-min-' + index + '" value="' + min + '" style="width:60px;padding:6px;" placeholder="Від">' +
+    '<span>—</span>' +
+    '<input class="form-input" type="number" id="new-range-max-' + index + '" value="' + max + '" style="width:60px;padding:6px;" placeholder="До">' +
+    '<span>: x</span>' +
+    '<input class="form-input" type="number" step="0.1" id="new-range-mult-' + index + '" value="' + mult + '" style="width:70px;padding:6px;">' +
+  '</div>';
+}
+
+async function createActivityType() {
+  var name = document.getElementById('new-type-name').value.trim();
+  var desc = document.getElementById('new-type-desc').value.trim();
+  var category = document.getElementById('new-type-category').value;
+  var weight = parseFloat(document.getElementById('new-type-weight').value);
+  var requiresInst = document.getElementById('new-type-requires-inst').value === 'true';
+
+  if (!name) {
+    alert('Вкажіть назву типу активності');
+    return;
+  }
+
+  if (isNaN(weight) || weight < 0) {
+    alert('Вкажіть коректну вагу');
+    return;
+  }
+
+  // Зібрати мультиплікатори
+  var ranges = [];
+  for (var i = 0; i < 3; i++) {
+    var minEl = document.getElementById('new-range-min-' + i);
+    var maxEl = document.getElementById('new-range-max-' + i);
+    var multEl = document.getElementById('new-range-mult-' + i);
+    if (!minEl) break;
+
+    var min = parseInt(minEl.value);
+    var max = maxEl.value ? parseInt(maxEl.value) : null;
+    var mult = parseFloat(multEl.value);
+
+    if (!isNaN(min) && !isNaN(mult)) {
+      ranges.push({ min: min, max: max, multiplier: mult });
+    }
+  }
+
+  // Визначити sort_order (в кінець)
+  var countResult = await db.from('activity_types').select('id', { count: 'exact', head: true });
+  var sortOrder = (countResult.count || 0) + 1;
+
+  var data = {
+    name: name,
+    description: desc,
+    category: category,
+    base_weight: weight,
+    requires_institution: requiresInst,
+    multipliers: { ranges: ranges },
+    sort_order: sortOrder,
+    is_active: true,
+    is_custom: true
+  };
+
+  var result = await db.from('activity_types').insert(data);
+
+  if (result.error) {
+    alert('Помилка: ' + result.error.message);
+    return;
+  }
+
+  closeWeightModal();
+  loadWeightsTab();
+}
+
+// === РЕДАГУВАННЯ ВАГИ ===
 
 async function openEditWeight(typeId) {
   var modal = document.getElementById('weight-modal');
@@ -141,8 +286,12 @@ async function openEditWeight(typeId) {
     '</div>';
   });
 
-  content.innerHTML = '<h3 style="font-size:18px;margin-bottom:20px;">Редагувати вагу</h3>' +
-    '<div style="font-weight:600;margin-bottom:16px;">' + t.name + '</div>' +
+  content.innerHTML = '<h3 style="font-size:18px;margin-bottom:20px;">Редагувати тип активності</h3>' +
+
+    '<div class="form-group">' +
+      '<label class="form-label">Назва</label>' +
+      '<input class="form-input" id="edit-type-name" value="' + t.name + '">' +
+    '</div>' +
 
     '<div class="form-group">' +
       '<label class="form-label">Базова вага</label>' +
@@ -170,9 +319,15 @@ async function openEditWeight(typeId) {
 }
 
 async function saveWeight(typeId) {
+  var name = document.getElementById('edit-type-name').value.trim();
   var baseWeight = parseFloat(document.getElementById('edit-weight-base').value);
   var isActive = document.getElementById('edit-weight-active').checked;
   var rangesCount = parseInt(document.getElementById('edit-weight-ranges-count').value);
+
+  if (!name) {
+    alert('Вкажіть назву');
+    return;
+  }
 
   if (isNaN(baseWeight) || baseWeight < 0) {
     alert('Вкажіть коректну вагу');
@@ -195,6 +350,7 @@ async function saveWeight(typeId) {
   }
 
   var updateData = {
+    name: name,
     base_weight: baseWeight,
     is_active: isActive,
     multipliers: { ranges: ranges },
@@ -219,6 +375,8 @@ function closeWeightModal() {
   document.getElementById('weight-modal').style.display = 'none';
 }
 
+// === ПІДРОЗДІЛИ ===
+
 async function loadDepartmentsTab() {
   var container = document.getElementById('settings-content');
   if (!container) return;
@@ -240,9 +398,13 @@ async function loadDepartmentsTab() {
   var departments = depts.filter(function(d) { return d.type === 'department'; });
   var units = depts.filter(function(d) { return d.type === 'unit'; });
 
+  var FACULTY_COLORS = {
+    'ФОіФ': '#F0AA33', 'ФМіМ': '#6B2FA4', 'АФ': '#1B8C4E',
+    'ІТФ': '#A0673C', 'ФВМ': '#2B62A0', 'БФ': '#B82025', 'ФВІіЕ': '#1A9EBF'
+  };
+
   var html = '';
 
-  // Факультети
   html += '<div class="card" style="margin-bottom:16px;"><div class="card-body">' +
     '<h3 style="font-size:16px;margin-bottom:12px;">Факультети (' + faculties.length + ')</h3>' +
     '<div style="display:grid;gap:8px;">';
@@ -260,12 +422,10 @@ async function loadDepartmentsTab() {
 
   html += '</div></div></div>';
 
-  // Кафедри
   html += '<div class="card" style="margin-bottom:16px;"><div class="card-body">' +
     '<h3 style="font-size:16px;margin-bottom:12px;">Кафедри (' + departments.length + ')</h3>' +
     '<div style="font-size:13px;color:var(--text-secondary);">';
 
-  // Групуємо кафедри по факультетах
   faculties.forEach(function(f) {
     var kafedry = departments.filter(function(d) { return d.parent_id === f.id; });
     if (kafedry.length > 0) {
@@ -280,7 +440,6 @@ async function loadDepartmentsTab() {
 
   html += '</div></div></div>';
 
-  // Інші
   if (units.length > 0) {
     html += '<div class="card"><div class="card-body">' +
       '<h3 style="font-size:16px;margin-bottom:12px;">Інші підрозділи (' + units.length + ')</h3>';
