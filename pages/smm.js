@@ -1,9 +1,9 @@
 // pages/smm.js — SMM-метрики (Фаза 2)
 
 var PLATFORMS = {
-  instagram: { name: 'Instagram', icon: '📸', color: '#E1306C', bonus: 20 },
-  tiktok: { name: 'TikTok', icon: '🎵', color: '#000000', bonus: 40 },
-  facebook: { name: 'Facebook', icon: '📘', color: '#1877F2', bonus: 20 }
+  instagram: { name: 'Instagram', icon: '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#E1306C" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1.5" fill="#E1306C" stroke="none"/></svg>', color: '#E1306C', bonus: 20 },
+  tiktok: { name: 'TikTok', icon: '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#000" stroke-width="1.5"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/></svg>', color: '#000000', bonus: 40 },
+  facebook: { name: 'Facebook', icon: '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#1877F2" stroke-width="1.5"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>', color: '#1877F2', bonus: 20 }
 };
 
 registerPage('smm', {
@@ -133,11 +133,12 @@ async function loadSmmProfiles(user) {
   smmProfiles.forEach(function(p) {
     var pl = PLATFORMS[p.platform];
     html += '<div class="card">' +
-      '<div class="card-body" style="text-align:center;padding:20px;">' +
-        '<div style="font-size:32px;margin-bottom:8px;">' + pl.icon + '</div>' +
+      '<div class="card-body" style="text-align:center;padding:20px;position:relative;">' +
+        '<button onclick="deleteSmmProfile(\'' + p.id + '\',\'' + pl.name + '\')" style="position:absolute;top:8px;right:8px;background:none;border:none;cursor:pointer;padding:4px;border-radius:6px;color:var(--text-muted);transition:all 0.2s;" onmouseover="this.style.color=\'var(--red)\';this.style.background=\'var(--red-soft)\'" onmouseout="this.style.color=\'var(--text-muted)\';this.style.background=\'none\'" title="Видалити"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>' +
+        '<div style="margin-bottom:8px;">' + pl.icon + '</div>' +
         '<div style="font-weight:700;margin-bottom:4px;">' + pl.name + '</div>' +
         '<div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;word-break:break-all;">' + (p.url || '—') + '</div>' +
-        '<span style="font-size:12px;font-weight:600;color:var(--green);background:var(--green-soft);padding:3px 8px;border-radius:6px;">+' + pl.bonus + ' балів за наявність</span>' +
+        '<span style="font-size:12px;font-weight:600;color:var(--green);background:var(--green-soft);padding:3px 8px;border-radius:6px;">+' + pl.bonus + ' балів</span>' +
       '</div>' +
     '</div>';
   });
@@ -146,7 +147,7 @@ async function loadSmmProfiles(user) {
   if (missingPlatforms.length > 0) {
     html += '<div class="card" style="border:2px dashed var(--border);cursor:pointer;" onclick="openSmmModal()">' +
       '<div class="card-body" style="text-align:center;padding:20px;">' +
-        '<div style="font-size:32px;margin-bottom:8px;">➕</div>' +
+        '<div style="margin-bottom:8px;"><svg viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" width="28" height="28"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>' +
         '<div style="font-weight:600;color:var(--text-muted);">Додати профіль</div>' +
       '</div>' +
     '</div>';
@@ -338,4 +339,13 @@ async function loadSmmHistory(user) {
 
   html += '</tbody></table></div></div>';
   container.innerHTML = html;
+}
+
+async function deleteSmmProfile(profileId, name) {
+  if (!confirm('Видалити профіль ' + name + '?\n\nВсі пов\'язані метрики також будуть видалені.')) return;
+  try { await db.from('smm_metrics').delete().eq('profile_id', profileId); } catch(e) {}
+  var result = await db.from('smm_profiles').delete().eq('id', profileId);
+  if (result.error) { alert('Помилка: ' + result.error.message); return; }
+  loadSmmProfiles(currentUser);
+  loadSmmHistory(currentUser);
 }

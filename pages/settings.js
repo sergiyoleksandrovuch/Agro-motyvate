@@ -16,6 +16,7 @@ registerPage('settings', {
         '<div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;" id="settings-tabs">' +
           '<button class="btn btn-secondary filter-active" onclick="settingsTab(\'weights\',this)" style="font-size:13px;padding:6px 14px;">Ваги активностей</button>' +
           '<button class="btn btn-secondary" onclick="settingsTab(\'departments\',this)" style="font-size:13px;padding:6px 14px;">Підрозділи</button>' +
+          '<button class="btn btn-secondary" onclick="settingsTab(\'staff\',this)" style="font-size:13px;padding:6px 14px;">Штат факультетів</button>' +
         '</div>' +
 
         '<div id="settings-content">Завантаження...</div>' +
@@ -52,6 +53,7 @@ function settingsTab(tab, btn) {
   btn.classList.add('filter-active');
   if (tab === 'weights') loadWeightsTab();
   if (tab === 'departments') loadDepartmentsTab();
+  if (tab === 'staff') loadStaffTab();
 }
 
 // === ВАГИ АКТИВНОСТЕЙ ===
@@ -435,4 +437,95 @@ async function loadDepartmentsTab() {
   }
 
   container.innerHTML = html;
+}
+
+// === ШТАТ ФАКУЛЬТЕТІВ ===
+
+async function loadStaffTab() {
+  var container = document.getElementById('settings-content');
+  if (!container) return;
+  container.innerHTML = '<div style="text-align:center;padding:20px;"><span class="spinner"></span></div>';
+
+  var result = await db.from('departments').select('id, name, short_name, staff_count, type').eq('type', 'faculty').eq('is_active', true).order('name');
+
+  if (result.error) {
+    container.innerHTML = '<div class="alert alert-error">Помилка: ' + result.error.message + '</div>';
+    return;
+  }
+
+  var faculties = result.data || [];
+  var FCOLORS = { '\u0424\u041e\u0456\u0424': '#F0AA33', '\u0424\u041c\u0456\u041c': '#8B5CF6', '\u0410\u0424': '#10B981', '\u0406\u0422\u0424': '#F97316', '\u0424\u0412\u041c': '#3B82F6', '\u0411\u0424': '#EF4444', '\u0424\u0412\u0406\u0456\u0415': '#06B6D4' };
+
+  var html = '<div class="card"><div class="card-body" style="padding:0;">' +
+    '<div style="padding:20px 22px 12px;"><div style="font-weight:700;font-size:15px;">Штатна чисельність факультетів</div>' +
+    '<div style="font-size:13px;color:var(--text-muted);margin-top:2px;">Використовується для нормалізованого рейтингу (бали / штат)</div></div>' +
+    '<table style="width:100%;border-collapse:collapse;font-size:14px;">' +
+    '<thead><tr style="border-bottom:2px solid var(--border);">' +
+      '<th style="padding:12px 22px;text-align:left;font-weight:600;color:var(--text-muted);font-size:11px;text-transform:uppercase;">Факультет</th>' +
+      '<th style="padding:12px 22px;text-align:center;font-weight:600;color:var(--text-muted);font-size:11px;text-transform:uppercase;">Поточний штат</th>' +
+      '<th style="padding:12px 22px;text-align:center;font-weight:600;color:var(--text-muted);font-size:11px;text-transform:uppercase;">Новий штат</th>' +
+      '<th style="padding:12px 22px;text-align:center;font-weight:600;color:var(--text-muted);font-size:11px;text-transform:uppercase;width:100px;"></th>' +
+    '</tr></thead><tbody>';
+
+  faculties.forEach(function(f) {
+    var color = FCOLORS[f.short_name] || 'var(--accent)';
+    html += '<tr style="border-bottom:1px solid var(--border-light);">' +
+      '<td style="padding:14px 22px;">' +
+        '<div style="display:flex;align-items:center;gap:10px;">' +
+          '<div style="width:10px;height:10px;border-radius:3px;background:' + color + ';flex-shrink:0;"></div>' +
+          '<div><div style="font-weight:600;">' + f.short_name + '</div>' +
+          '<div style="font-size:12px;color:var(--text-muted);">' + f.name + '</div></div>' +
+        '</div>' +
+      '</td>' +
+      '<td style="padding:14px 22px;text-align:center;">' +
+        '<span style="font-weight:700;font-size:18px;">' + (f.staff_count || '—') + '</span>' +
+      '</td>' +
+      '<td style="padding:14px 22px;text-align:center;">' +
+        '<input type="number" min="1" max="500" value="' + (f.staff_count || '') + '" id="staff-' + f.id + '" style="width:80px;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--r1);font-size:14px;text-align:center;font-family:inherit;outline:none;transition:border-color 0.2s;" onfocus="this.style.borderColor=\'var(--accent)\'" onblur="this.style.borderColor=\'var(--border)\'">' +
+      '</td>' +
+      '<td style="padding:14px 22px;text-align:center;">' +
+        '<button class="btn btn-primary" onclick="saveStaffCount(\'' + f.id + '\')" style="padding:6px 16px;font-size:13px;">Зберегти</button>' +
+      '</td>' +
+    '</tr>';
+  });
+
+  html += '</tbody></table></div></div>';
+
+  // Візуальна діаграма
+  html += '<div class="card" style="margin-top:16px;"><div class="card-body" style="padding:22px;">' +
+    '<div style="font-weight:700;font-size:15px;margin-bottom:16px;">Співвідношення штату</div>' +
+    '<div style="display:flex;flex-direction:column;gap:10px;">';
+
+  var maxStaff = 1;
+  faculties.forEach(function(f) { if ((f.staff_count || 0) > maxStaff) maxStaff = f.staff_count; });
+
+  faculties.forEach(function(f) {
+    var color = FCOLORS[f.short_name] || 'var(--accent)';
+    var pct = maxStaff > 0 ? Math.round(((f.staff_count || 0) / maxStaff) * 100) : 0;
+    html += '<div style="display:flex;align-items:center;gap:12px;">' +
+      '<div style="width:50px;font-weight:600;font-size:13px;flex-shrink:0;">' + f.short_name + '</div>' +
+      '<div style="flex:1;height:28px;background:var(--bg-warm);border-radius:8px;overflow:hidden;position:relative;">' +
+        '<div style="height:100%;width:' + pct + '%;background:' + color + ';border-radius:8px;transition:width 0.6s;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;">' +
+          (pct > 15 ? '<span style="color:#fff;font-weight:700;font-size:12px;">' + (f.staff_count || 0) + '</span>' : '') +
+        '</div>' +
+        (pct <= 15 ? '<span style="position:absolute;left:' + (pct + 2) + '%;top:50%;transform:translateY(-50%);font-weight:600;font-size:12px;color:var(--text-secondary);">' + (f.staff_count || 0) + '</span>' : '') +
+      '</div>' +
+    '</div>';
+  });
+
+  html += '</div></div></div>';
+  container.innerHTML = html;
+}
+
+async function saveStaffCount(deptId) {
+  var input = document.getElementById('staff-' + deptId);
+  if (!input) return;
+  var val = parseInt(input.value);
+  if (!val || val < 1) { alert('Введіть коректне число (мінімум 1)'); return; }
+
+  var result = await db.from('departments').update({ staff_count: val }).eq('id', deptId);
+  if (result.error) { alert('Помилка: ' + result.error.message); return; }
+
+  input.style.borderColor = 'var(--green)';
+  setTimeout(function() { input.style.borderColor = 'var(--border)'; loadStaffTab(); }, 600);
 }

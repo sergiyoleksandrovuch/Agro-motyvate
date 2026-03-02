@@ -10,23 +10,26 @@ registerPage('dashboard', {
 
     return '<div style="max-width:1100px;">' +
 
-      // Вітання
-      '<div style="background:linear-gradient(135deg,#F0AA33,#E09418,#CC8410);border-radius:20px;padding:28px 32px;color:#fff;margin-bottom:24px;position:relative;overflow:hidden;">' +
-        '<div style="position:absolute;top:-50%;right:-8%;width:260px;height:260px;background:rgba(255,255,255,0.07);border-radius:50%;"></div>' +
-        '<h2 style="color:#fff;font-size:22px;font-weight:800;margin-bottom:4px;">Вітаємо, ' + name + '!</h2>' +
-        '<p style="opacity:0.88;font-size:14px;">Ви увійшли як ' + ROLE_LABELS[user.role] + (dept ? ' · ' + dept : '') + '</p>' +
+      // Вітання — premium gradient
+      '<div style="background:linear-gradient(135deg,#F0AA33 0%,#E89C1A 40%,#D4860E 100%);border-radius:var(--r4);padding:32px 36px;color:#fff;margin-bottom:24px;position:relative;overflow:hidden;">' +
+        '<div style="position:absolute;top:-60%;right:-5%;width:300px;height:300px;background:rgba(255,255,255,0.06);border-radius:50%;"></div>' +
+        '<div style="position:absolute;bottom:-40%;left:20%;width:200px;height:200px;background:rgba(255,255,255,0.04);border-radius:50%;"></div>' +
+        '<div style="position:relative;z-index:1;">' +
+          '<h2 style="color:#fff;font-size:24px;font-weight:800;margin-bottom:6px;letter-spacing:-0.03em;">Вітаємо, ' + name + '!</h2>' +
+          '<p style="opacity:0.85;font-size:14px;font-weight:500;">' + ROLE_LABELS[user.role] + (dept ? ' · ' + dept : '') + '</p>' +
+        '</div>' +
       '</div>' +
 
-      // KPI-картки
-      '<div id="dash-stats" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:24px;"></div>' +
+      // KPI-картки інфографіка
+      '<div id="dash-stats" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:28px;"></div>' +
 
-      // Швидкі дії
-      '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-bottom:28px;">' +
-        quickAction('new-activity', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>', 'Новий захід', true) +
-        quickAction('activities', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>', 'Мої заходи', false) +
-        quickAction('smm', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>', 'SMM', false) +
-        quickAction('other-metrics', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>', 'Показники', false) +
-        quickAction('ranking', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>', 'Рейтинг', false) +
+      // Швидкі дії — pill buttons
+      '<div style="display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap;">' +
+        quickAction('new-activity', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>', 'Новий захід', true) +
+        quickAction('activities', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>', 'Мої заходи', false) +
+        quickAction('smm', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>', 'SMM', false) +
+        quickAction('ranking', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>', 'Рейтинг', false) +
+        quickAction('export', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>', 'Експорт', false) +
       '</div>' +
 
       // Рядок 1: Активність по місяцях + Павукоподібна діаграма
@@ -38,7 +41,7 @@ registerPage('dashboard', {
       // Рядок 2: Розподіл по типах + Рейтинг факультетів
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;" class="dash-grid-2">' +
         chartCard('Розподіл по типах заходів', 'chart-types', 240) +
-        '<div class="card"><div class="card-body" style="padding:16px;">' +
+        '<div class="card" style="overflow:hidden;"><div class="card-body" style="padding:20px;">' +
           '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">' +
             '<div style="font-weight:600;font-size:14px;">Рейтинг факультетів</div>' +
             '<a style="font-size:12px;cursor:pointer;color:var(--accent);" onclick="navigateTo(\'ranking\')">Детальніше →</a>' +
@@ -50,16 +53,16 @@ registerPage('dashboard', {
       // Рядок 3: Топ-співробітники + Статуси заходів (для адміна)
       (isAdmin ?
         '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;" class="dash-grid-2">' +
-          '<div class="card"><div class="card-body" style="padding:16px;">' +
-            '<div style="font-weight:600;font-size:14px;margin-bottom:12px;">Найактивніші співробітники</div>' +
+          '<div class="card" style="overflow:hidden;"><div class="card-body" style="padding:20px;">' +
+            '<div style="font-weight:700;font-size:14px;margin-bottom:14px;color:var(--text-primary);letter-spacing:-0.01em;">Найактивніші співробітники</div>' +
             '<div id="dash-top-users" style="min-height:200px;">Завантаження...</div>' +
           '</div></div>' +
           chartCard('Статуси заходів (всі підрозділи)', 'chart-statuses', 220) +
         '</div>'
       :
         '<div style="display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:16px;">' +
-          '<div class="card"><div class="card-body" style="padding:16px;">' +
-            '<div style="font-weight:600;font-size:14px;margin-bottom:12px;">Найактивніші співробітники підрозділу</div>' +
+          '<div class="card" style="overflow:hidden;"><div class="card-body" style="padding:20px;">' +
+            '<div style="font-weight:700;font-size:14px;margin-bottom:14px;color:var(--text-primary);letter-spacing:-0.01em;">Найактивніші співробітники підрозділу</div>' +
             '<div id="dash-top-users" style="min-height:180px;">Завантаження...</div>' +
           '</div></div>' +
         '</div>'
@@ -107,17 +110,20 @@ registerPage('dashboard', {
 });
 
 function chartCard(title, canvasId, height) {
-  return '<div class="card"><div class="card-body" style="padding:16px;">' +
-    '<div style="font-weight:600;font-size:14px;margin-bottom:12px;">' + title + '</div>' +
+  return '<div class="card" style="overflow:hidden;"><div class="card-body" style="padding:20px;">' +
+    '<div style="font-weight:700;font-size:14px;margin-bottom:14px;color:var(--text-primary);letter-spacing:-0.01em;">' + title + '</div>' +
     '<div style="position:relative;height:' + height + 'px;width:100%;"><canvas id="' + canvasId + '"></canvas></div>' +
   '</div></div>';
 }
 
 function quickAction(page, icon, label, primary) {
-  var cls = primary ? 'btn btn-primary btn-lg' : 'btn btn-secondary btn-lg';
-  return '<button class="' + cls + '" onclick="navigateTo(\'' + page + '\')" style="padding:14px 8px;flex-direction:column;gap:6px;">' +
-    '<span style="opacity:0.85;">' + icon + '</span>' +
-    '<span style="font-size:12px;">' + label + '</span>' +
+  if (primary) {
+    return '<button class="btn btn-primary" onclick="navigateTo(\'' + page + '\')" style="gap:8px;border-radius:14px;">' +
+      icon + '<span>' + label + '</span>' +
+    '</button>';
+  }
+  return '<button class="btn btn-secondary" onclick="navigateTo(\'' + page + '\')" style="gap:8px;border-radius:14px;">' +
+    icon + '<span>' + label + '</span>' +
   '</button>';
 }
 
@@ -157,25 +163,34 @@ async function loadDashStats(user) {
   var grandTotal = Math.round((totalScore + smmScore + omScore) * 10) / 10;
 
   container.innerHTML =
-    statCard('Загальний бал', grandTotal, 'var(--accent-deep)') +
-    statCard('Заходів проведено', activities.length, 'var(--green)') +
-    statCard('Верифіковано', verified.length, '#049249') +
-    statCard('SMM бали', smmScore, '#E1306C') +
-    statCard('Інші показники', omScore, 'var(--blue)') +
-    (pending > 0 ? statCard('На перевірці', pending, 'var(--accent)') : '');
+    statCard('Загальний бал', grandTotal, 'accent', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>') +
+    statCard('Заходів', activities.length, 'purple', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>') +
+    statCard('Верифіковано', verified.length, 'green', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>') +
+    statCard('SMM бали', smmScore, 'purple', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>') +
+    statCard('Інші показники', omScore, 'blue', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>') +
+    (pending > 0 ? statCard('На перевірці', pending, 'accent', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>') : '');
 }
 
-function statCard(label, value, color) {
-  return '<div class="card"><div class="card-body" style="padding:14px;text-align:center;">' +
-    '<div style="font-family:\'Plus Jakarta Sans\';font-weight:800;font-size:22px;color:' + color + ';">' + value + '</div>' +
-    '<div style="font-size:11px;color:var(--text-muted);margin-top:3px;">' + label + '</div>' +
-  '</div></div>';
+function statCard(label, value, colorClass, iconSvg) {
+  var colors = {
+    accent: { bg: 'var(--accent-glow)', color: 'var(--accent)', grad: 'linear-gradient(135deg, #F0AA33, #E8941A)' },
+    green: { bg: 'var(--green-soft)', color: 'var(--green)', grad: 'linear-gradient(135deg, #10B981, #059669)' },
+    blue: { bg: 'var(--blue-soft)', color: 'var(--blue)', grad: 'linear-gradient(135deg, #3B82F6, #2563EB)' },
+    purple: { bg: 'rgba(139,92,246,0.1)', color: 'var(--purple)', grad: 'linear-gradient(135deg, #8B5CF6, #7C3AED)' }
+  };
+  var c = colors[colorClass] || colors.accent;
+
+  return '<div class="stat-card" data-color="' + colorClass + '">' +
+    '<div class="stat-icon" style="background:' + c.bg + ';color:' + c.color + ';">' + (iconSvg || '') + '</div>' +
+    '<div class="stat-value">' + value + '</div>' +
+    '<div class="stat-label">' + label + '</div>' +
+  '</div>';
 }
 
 // ===================== ВСІ ГРАФІКИ =====================
 
-var FCOLORS = { 'ФОіФ': '#F0AA33', 'ФМіМ': '#6B2FA4', 'АФ': '#1B8C4E', 'ІТФ': '#A0673C', 'ФВМ': '#2B62A0', 'БФ': '#B82025', 'ФВІіЕ': '#1A9EBF' };
-var PALETTE = ['#F0AA33', '#6B2FA4', '#1B8C4E', '#A0673C', '#2B62A0', '#B82025', '#1A9EBF', '#049249', '#E1306C', '#939A9D'];
+var FCOLORS = { 'ФОіФ': '#F0AA33', 'ФМіМ': '#8B5CF6', 'АФ': '#10B981', 'ІТФ': '#F97316', 'ФВМ': '#3B82F6', 'БФ': '#EF4444', 'ФВІіЕ': '#06B6D4' };
+var PALETTE = ['#F0AA33', '#8B5CF6', '#10B981', '#F97316', '#3B82F6', '#EF4444', '#06B6D4', '#EC4899', '#84CC16', '#94A3B8'];
 
 async function loadAllCharts(user) {
   var isAdmin = user.role === 'admin' || user.role === 'rectorate';
@@ -572,7 +587,7 @@ async function loadDashBadges(user) {
       '<a style="font-size:12px;cursor:pointer;color:var(--accent);" onclick="navigateTo(\'badges\')">Всі досягнення &rarr;</a>' +
     '</div>';
 
-    html += '<div class="card"><div class="card-body" style="padding:16px;">' +
+    html += '<div class="card" style="overflow:hidden;"><div class="card-body" style="padding:20px;">' +
       '<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;">';
 
     defs.forEach(function(d) {

@@ -203,15 +203,23 @@ async function loadOmHistory(user) {
               '<div style="font-size:11px;color:var(--text-muted);">балів</div>' +
             '</div>' +
             '<span class="badge ' + statusClass + '">' + statusText + '</span>' +
+            '<button onclick="deleteOtherMetric(\'' + item.id + '\')" style="background:none;border:none;cursor:pointer;padding:4px;border-radius:6px;color:var(--text-muted);transition:all 0.2s;" onmouseover="this.style.color=\'var(--red)\';this.style.background=\'var(--red-soft)\'" onmouseout="this.style.color=\'var(--text-muted)\';this.style.background=\'none\'" title="Видалити"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>' +
           '</div>' +
         '</div>';
 
     if (item.status === 'rejected' && item.rejection_comment) {
-      html += '<div style="margin-top:8px;padding:8px 12px;background:var(--red-soft);border-radius:8px;font-size:13px;color:var(--red);">⚠️ ' + item.rejection_comment + '</div>';
+      html += '<div style="margin-top:8px;padding:8px 12px;background:var(--red-soft);border-radius:8px;font-size:13px;color:var(--red);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="vertical-align:middle;margin-right:4px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' + item.rejection_comment + '</div>';
     }
 
     html += '</div></div>';
   });
 
   container.innerHTML = html;
+}
+
+async function deleteOtherMetric(id) {
+  if (!confirm('Видалити цей запис показників?\n\nЦя дія незворотна.')) return;
+  var result = await db.from('other_metrics').delete().eq('id', id);
+  if (result.error) { alert('Помилка: ' + result.error.message); return; }
+  loadOmHistory(currentUser);
 }

@@ -45,13 +45,13 @@ registerPage('export', {
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;" class="export-filters">' +
 
         exportCard('activities-excel', 'Заходи (Excel)',
-          'Повний список заходів з балами, закладами, статусами', '📊', 'Excel .xlsx') +
+          'Повний список заходів з балами, закладами, статусами', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="32" height="32"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>', 'Excel .xlsx') +
 
         exportCard('activities-pdf', 'Заходи (PDF)',
           'Зведена таблиця заходів для друку', '📄', 'PDF') +
 
         exportCard('ranking-excel', 'Рейтинг факультетів (Excel)',
-          'Зведений рейтинг з балами по категоріях', '🏆', 'Excel .xlsx') +
+          'Зведений рейтинг з балами по категоріях', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="32" height="32"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>', 'Excel .xlsx') +
 
         exportCard('ranking-pdf', 'Рейтинг факультетів (PDF)',
           'Рейтингова таблиця для звітності', '🏅', 'PDF') +
@@ -60,7 +60,7 @@ registerPage('export', {
           exportCard('users-excel', 'Користувачі (Excel)',
             'Список користувачів з ролями та підрозділами', '👥', 'Excel .xlsx') +
           exportCard('summary-pdf', 'Зведений звіт (PDF)',
-            'Загальний звіт з KPI, рейтингом та статистикою', '📋', 'PDF')
+            'Загальний звіт з KPI, рейтингом та статистикою', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="32" height="32"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>', 'PDF')
         : '') +
 
       '</div>' +
