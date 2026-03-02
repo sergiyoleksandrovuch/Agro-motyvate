@@ -13,7 +13,7 @@ registerPage('dashboard', {
       // Вітання
       '<div style="background:linear-gradient(135deg,#F0AA33,#E09418,#CC8410);border-radius:20px;padding:28px 32px;color:#fff;margin-bottom:24px;position:relative;overflow:hidden;">' +
         '<div style="position:absolute;top:-50%;right:-8%;width:260px;height:260px;background:rgba(255,255,255,0.07);border-radius:50%;"></div>' +
-        '<h2 style="color:#fff;font-size:22px;font-weight:800;margin-bottom:4px;">Вітаємо, ' + name + '! 👋</h2>' +
+        '<h2 style="color:#fff;font-size:22px;font-weight:800;margin-bottom:4px;">Вітаємо, ' + name + '!</h2>' +
         '<p style="opacity:0.88;font-size:14px;">Ви увійшли як ' + ROLE_LABELS[user.role] + (dept ? ' · ' + dept : '') + '</p>' +
       '</div>' +
 
@@ -22,11 +22,11 @@ registerPage('dashboard', {
 
       // Швидкі дії
       '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-bottom:28px;">' +
-        quickAction('new-activity', '➕', 'Новий захід', true) +
-        quickAction('activities', '📋', 'Мої заходи', false) +
-        quickAction('smm', '📱', 'SMM', false) +
-        quickAction('other-metrics', '📊', 'Показники', false) +
-        quickAction('ranking', '🏆', 'Рейтинг', false) +
+        quickAction('new-activity', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>', 'Новий захід', true) +
+        quickAction('activities', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>', 'Мої заходи', false) +
+        quickAction('smm', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>', 'SMM', false) +
+        quickAction('other-metrics', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>', 'Показники', false) +
+        quickAction('ranking', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>', 'Рейтинг', false) +
       '</div>' +
 
       // Рядок 1: Активність по місяцях + Павукоподібна діаграма
@@ -115,8 +115,8 @@ function chartCard(title, canvasId, height) {
 
 function quickAction(page, icon, label, primary) {
   var cls = primary ? 'btn btn-primary btn-lg' : 'btn btn-secondary btn-lg';
-  return '<button class="' + cls + '" onclick="navigateTo(\'' + page + '\')" style="padding:14px 8px;flex-direction:column;gap:4px;">' +
-    '<span style="font-size:20px;">' + icon + '</span>' +
+  return '<button class="' + cls + '" onclick="navigateTo(\'' + page + '\')" style="padding:14px 8px;flex-direction:column;gap:6px;">' +
+    '<span style="opacity:0.85;">' + icon + '</span>' +
     '<span style="font-size:12px;">' + label + '</span>' +
   '</button>';
 }

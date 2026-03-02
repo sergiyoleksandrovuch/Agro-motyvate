@@ -132,11 +132,11 @@ function stepActivityType() {
 
   // Групування за категорією
   var categories = {
-    'field_visit': { label: '🏫 Виїзні зустрічі', items: [] },
-    'online': { label: '💻 Онлайн', items: [] },
-    'internal': { label: '🎓 В університеті', items: [] },
-    'external_event': { label: '🎪 Зовнішні заходи', items: [] },
-    'other': { label: '📌 Інше', items: [] }
+    'field_visit': { label: 'Виїзні зустрічі', items: [] },
+    'online': { label: 'Онлайн', items: [] },
+    'internal': { label: 'В університеті', items: [] },
+    'external_event': { label: 'Зовнішні заходи', items: [] },
+    'other': { label: 'Інше', items: [] }
   };
 
   activityTypes.forEach(function(t) {
@@ -209,7 +209,7 @@ function stepInstitution() {
         (wizardData.has_memorandum ? ' checked' : '') +
         ' onchange="wizardData.has_memorandum = this.checked">' +
       '<div>' +
-        '<div style="font-size:14px;font-weight:600;">📝 Укладено меморандум про співпрацю</div>' +
+        '<div style="font-size:14px;font-weight:600;">Укладено меморандум про співпрацю</div>' +
         '<div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Додатковий бал за укладення меморандуму із закладом освіти</div>' +
       '</div>' +
     '</label>' +
@@ -321,7 +321,7 @@ function stepDetails() {
     '<div id="photo-previews" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;"></div>' +
     '<label style="display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border:2px dashed var(--border);border-radius:10px;cursor:pointer;font-size:13px;color:var(--text-muted);transition:border-color 0.15s;" ' +
       'onmouseover="this.style.borderColor=\'var(--accent)\'" onmouseout="this.style.borderColor=\'var(--border)\'">' +
-      '<span style="font-size:20px;">📎</span> Додати файли (фото, PDF)' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" style="flex-shrink:0;"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg> Додати файли (фото, PDF)' +
       '<input type="file" id="photo-input" multiple accept="image/*,.pdf" style="display:none;" onchange="handlePhotoSelect(this)">' +
     '</label>' +
     '<div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Макс. 5 МБ на файл. JPG, PNG, PDF.</div>' +
@@ -411,7 +411,7 @@ function stepReview() {
 
   // Кнопка "Подати на перевірку"
   html += '<div style="margin-top:16px;text-align:center;">' +
-    '<button class="btn btn-success btn-lg" onclick="submitActivity()" style="gap:6px;">📤 Зберегти і подати на перевірку</button>' +
+    '<button class="btn btn-success btn-lg" onclick="submitActivity()" style="gap:6px;">Зберегти і подати на перевірку</button>' +
     '<div style="font-size:12px;color:var(--text-muted);margin-top:6px;">Або натисніть "Зберегти як чернетку" щоб зберегти без подачі</div>' +
   '</div>';
 
