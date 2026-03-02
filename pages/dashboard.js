@@ -118,70 +118,46 @@ function chartCard(title, canvasId, height) {
   '</div></div>';
 }
 
-function quickAction(page, icon, label, primary) {
-
 // Українське привітання з кличним відмінком
 function getUkrainianGreeting(firstName) {
   if (!firstName) return 'Вітаємо!';
-
-  // Визначення статі за закінченням імені
   var name = firstName.trim();
   var lower = name.toLowerCase();
   var isFemale = false;
-
-  // Типові жіночі закінчення
   var femaleEndings = ['на', 'ія', 'ля', 'ра', 'та', 'да', 'ка', 'ва', 'са', 'ша', 'ча', 'ща', 'ня', 'жа', 'га', 'ха', 'ба', 'ма', 'па'];
   for (var i = 0; i < femaleEndings.length; i++) {
     if (lower.endsWith(femaleEndings[i])) { isFemale = true; break; }
   }
-
-  // Виключення: чоловічі імена що закінчуються на -а/-я
   var maleExceptions = ['микола', 'ілля', 'сава', 'хома', 'лука', 'кузьма', 'никита'];
   if (maleExceptions.indexOf(lower) >= 0) isFemale = false;
-
-  // Кличний відмінок
   var vocative = toVocative(name, isFemale);
-
   var prefix = isFemale ? 'пані' : 'пане';
   return 'Вітаємо, ' + prefix + ' ' + vocative + '!';
 }
 
 function toVocative(name, isFemale) {
   var lower = name.toLowerCase();
-  var len = name.length;
-
   if (isFemale) {
-    // Жіночі імена
-    if (lower.endsWith('ія')) return name.slice(0, -1) + 'є'; // Вікторія → Вікторіє, Марія → Маріє
-    if (lower.endsWith('ля')) return name.slice(0, -1) + 'е'; // Наталя → Натале
-    if (lower.endsWith('я')) return name.slice(0, -1) + 'е';  // Тетяна → Тетяне (ні, Тетяна → Тетяно)
-    if (lower.endsWith('на') || lower.endsWith('ра') || lower.endsWith('да') || lower.endsWith('та') || lower.endsWith('ва') || lower.endsWith('са') || lower.endsWith('ша') || lower.endsWith('ча') || lower.endsWith('ка') || lower.endsWith('ба') || lower.endsWith('ма') || lower.endsWith('па') || lower.endsWith('га') || lower.endsWith('ха')) {
-      return name.slice(0, -1) + 'о'; // Олена → Олено, Ірина → Іріно
-    }
-    return name; // за замовчуванням без змін
+    if (lower.endsWith('ія')) return name.slice(0, -1) + 'є';
+    if (lower.endsWith('ля')) return name.slice(0, -1) + 'е';
+    if (lower.endsWith('я')) return name.slice(0, -1) + 'е';
+    if (lower.endsWith('а')) return name.slice(0, -1) + 'о';
+    return name;
   } else {
-    // Чоловічі імена
-    if (lower.endsWith('ій')) return name.slice(0, -2) + 'ію'; // Сергій → Сергію, Дмитрій → Дмитрію
-    if (lower.endsWith('ей')) return name.slice(0, -2) + 'ею'; // Андрей → Андрею
-    if (lower.endsWith('ло')) return name.slice(0, -1) + 'е';  // Павло → Павле
-    if (lower.endsWith('ко')) return name.slice(0, -1) + 'у';  // Тарасенко → Тарасенку (але це прізвище)
+    if (lower.endsWith('ій')) return name.slice(0, -2) + 'ію';
+    if (lower.endsWith('ей')) return name.slice(0, -2) + 'ею';
+    if (lower.endsWith('ло')) return name.slice(0, -1) + 'е';
     if (lower === 'олег') return name + 'у';
     if (lower === 'ігор') return name + 'ю';
     if (lower === 'петро') return name.slice(0, -1) + 'е';
-    if (lower.endsWith('р') || lower.endsWith('н') || lower.endsWith('в') || lower.endsWith('м') || lower.endsWith('т') || lower.endsWith('д') || lower.endsWith('л') || lower.endsWith('с') || lower.endsWith('з') || lower.endsWith('к') || lower.endsWith('г') || lower.endsWith('б') || lower.endsWith('п') || lower.endsWith('ш')) {
-      // Тверді приголосні → додаємо -е
-      if (lower.endsWith('к') || lower.endsWith('г') || lower.endsWith('х')) {
-        return name + 'у'; // Олек → Олеку, Марк → Марку
-      }
-      return name + 'е'; // Богдан → Богдане, Віктор → Вікторе
-    }
-    if (lower.endsWith('й')) return name.slice(0, -1) + 'ю'; // Олексій → Олексію (загальне)
-    if (lower.endsWith('ь')) return name.slice(0, -1) + 'ю'; // Ігорь → Ігорю
-    return name + 'е'; // за замовчуванням
+    if (lower.endsWith('й')) return name.slice(0, -1) + 'ю';
+    if (lower.endsWith('ь')) return name.slice(0, -1) + 'ю';
+    if (lower.endsWith('к') || lower.endsWith('г') || lower.endsWith('х')) return name + 'у';
+    return name + 'е';
   }
 }
 
-
+function quickAction(page, icon, label, primary) {
   if (primary) {
     return '<button class="btn btn-primary" onclick="navigateTo(\'' + page + '\')" style="gap:8px;border-radius:14px;">' +
       icon + '<span>' + label + '</span>' +
