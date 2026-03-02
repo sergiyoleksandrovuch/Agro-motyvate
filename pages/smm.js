@@ -252,6 +252,7 @@ async function saveSmmMetrics() {
     posts_monthly: parseInt(document.getElementById('smm-posts-monthly').value) || 0,
     posts_yearly: parseInt(document.getElementById('smm-posts-yearly').value) || 0,
     score: score,
+    status: 'submitted',
     created_by: currentUser.id
   };
 
@@ -309,6 +310,9 @@ async function loadSmmHistory(user) {
     return;
   }
 
+  var isVerifier = currentUser.role === 'admin' || currentUser.role === 'verifier';
+  var statusLabels = { draft: 'Чернетка', submitted: 'На перевірці', verified: 'Підтверджено', rejected: 'Відхилено' };
+
   var html = '<h3 style="font-size:16px;margin-bottom:12px;">Історія метрик</h3>' +
     '<div class="card"><div class="card-body" style="padding:0;overflow-x:auto;">' +
     '<table style="width:100%;border-collapse:collapse;font-size:13px;">' +
@@ -320,25 +324,57 @@ async function loadSmmHistory(user) {
         '<th style="padding:10px 12px;text-align:center;color:var(--text-muted);font-size:11px;">Пости/міс</th>' +
         '<th style="padding:10px 12px;text-align:center;color:var(--text-muted);font-size:11px;">Пости/рік</th>' +
         '<th style="padding:10px 12px;text-align:right;color:var(--text-muted);font-size:11px;">Бал</th>' +
+        '<th style="padding:10px 12px;text-align:center;color:var(--text-muted);font-size:11px;">Статус</th>' +
+        (isVerifier ? '<th style="padding:10px 12px;text-align:center;color:var(--text-muted);font-size:11px;">Дії</th>' : '') +
       '</tr></thead><tbody>';
 
   result.data.forEach(function(m) {
     var profile = profileMap[m.profile_id];
     var pl = profile ? PLATFORMS[profile.platform] : { icon: '?', name: '?' };
+    var st = m.status || 'submitted';
+    var stText = statusLabels[st] || st;
+    var stClass = 'badge-' + st;
 
     html += '<tr style="border-bottom:1px solid var(--border-light);">' +
       '<td style="padding:10px 12px;">' + m.report_date + '</td>' +
-      '<td style="padding:10px 12px;">' + pl.icon + ' ' + pl.name + '</td>' +
+      '<td style="padding:10px 12px;">' + pl.name + '</td>' +
       '<td style="padding:10px 12px;text-align:center;">' + m.followers_count + '</td>' +
       '<td style="padding:10px 12px;text-align:center;color:var(--green);">+' + m.followers_growth + '</td>' +
       '<td style="padding:10px 12px;text-align:center;">' + m.posts_monthly + '</td>' +
       '<td style="padding:10px 12px;text-align:center;">' + m.posts_yearly + '</td>' +
       '<td style="padding:10px 12px;text-align:right;font-weight:700;color:var(--accent-deep);">' + m.score + '</td>' +
-    '</tr>';
+      '<td style="padding:10px 12px;text-align:center;"><span class="badge ' + stClass + '">' + stText + '</span></td>';
+
+    if (isVerifier) {
+      html += '<td style="padding:10px 12px;text-align:center;">';
+      if (st === 'submitted') {
+        html += '<button onclick="verifySmmMetric(\'' + m.id + '\',true)" class="btn btn-success" style="padding:3px 10px;font-size:12px;margin-right:4px;">&#10003;</button>' +
+                '<button onclick="verifySmmMetric(\'' + m.id + '\',false)" class="btn btn-danger" style="padding:3px 10px;font-size:12px;">&#10007;</button>';
+      } else if (st === 'verified') { html += '<span style="color:var(--green);font-size:14px;">&#10003;</span>'; }
+      html += '</td>';
+    }
+    html += '</tr>';
+    if (st === 'rejected' && m.rejection_comment) {
+      var cols = isVerifier ? 9 : 8;
+      html += '<tr><td colspan="' + cols + '" style="padding:4px 12px 8px;"><div style="padding:6px 10px;background:var(--red-soft);border-radius:6px;font-size:12px;color:var(--red);">' + m.rejection_comment + '</div></td></tr>';
+    }
   });
 
   html += '</tbody></table></div></div>';
   container.innerHTML = html;
+}
+
+async function verifySmmMetric(id, approve) {
+  if (approve) {
+    var result = await db.from('smm_metrics').update({ status: 'verified', verified_by: currentUser.id, verified_at: new Date().toISOString() }).eq('id', id);
+    if (result.error) { alert('Помилка: ' + result.error.message); return; }
+  } else {
+    var comment = prompt('Причина відхилення:');
+    if (!comment) return;
+    var result = await db.from('smm_metrics').update({ status: 'rejected', rejection_comment: comment, verified_by: currentUser.id, verified_at: new Date().toISOString() }).eq('id', id);
+    if (result.error) { alert('Помилка: ' + result.error.message); return; }
+  }
+  loadSmmHistory(currentUser);
 }
 
 async function deleteSmmProfile(profileId, name) {
