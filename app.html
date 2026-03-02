@@ -80,6 +80,11 @@
         Досягнення
       </a>
 
+      <a class="nav-link" data-page="export" onclick="navigateTo('export')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Експорт звітів
+      </a>
+
       <!-- Верифікація — тільки для admin та verifier -->
       <div id="nav-verify-section" style="display:none">
         <div class="nav-group">Верифікація</div>
@@ -139,6 +144,9 @@
 
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -161,6 +169,7 @@
 <script src="pages/news.js"></script>
 <script src="pages/kpi.js"></script>
 <script src="pages/badges.js"></script>
+<script src="pages/export.js"></script>
 
 <!-- Ініціалізація -->
 <script>
