@@ -621,6 +621,12 @@ async function saveActivity(status) {
   // Успіх
   pendingFiles = [];
   var msg = status === 'submitted' ? 'подано на перевірку' : 'збережено як чернетку';
-  alert('Захід успішно ' + msg + '!' + (pendingFiles.length > 0 ? '' : ''));
+  alert('Захід успішно ' + msg + '!');
+
+  // Перевірити бейджі
+  if (typeof checkAndAwardBadges === 'function') {
+    checkAndAwardBadges(wizardData.created_by);
+  }
+
   navigateTo('activities');
 }

@@ -73,6 +73,12 @@ registerPage('dashboard', {
         '</div>'
       : '') +
 
+      // Новини (останні)
+      '<div id="dash-news"></div>' +
+
+      // Бейджі
+      '<div id="dash-badges"></div>' +
+
       // Останні заходи
       '<div id="dash-recent"></div>' +
 
@@ -93,6 +99,8 @@ registerPage('dashboard', {
     setTimeout(async function() {
       await loadAllCharts(user);
       await loadTopUsers(user);
+      await loadDashNews();
+      await loadDashBadges(user);
       await loadDashRecent(user);
     }, 150);
   }
@@ -539,6 +547,85 @@ async function getFacultyScores() {
   return faculties.map(function(f) {
     return { id: f.id, short_name: f.short_name, score: Math.round((scores[f.id] || 0) * 10) / 10 };
   }).sort(function(a, b) { return b.score - a.score; });
+}
+
+// --- Бейджі на дашборді ---
+async function loadDashBadges(user) {
+  var container = document.getElementById('dash-badges');
+  if (!container) return;
+
+  try {
+    var defResult = await db.from('badge_definitions').select('id, name, icon, color').eq('is_active', true).order('sort_order');
+    var defs = defResult.data || [];
+
+    var earnedResult = await db.from('user_badges').select('badge_id, earned_at').eq('user_id', user.id).order('earned_at', { ascending: false });
+    var earned = earnedResult.data || [];
+    var earnedIds = earned.map(function(e) { return e.badge_id; });
+
+    var earnedCount = earned.length;
+    var totalCount = defs.length;
+
+    if (totalCount === 0) { container.innerHTML = ''; return; }
+
+    var html = '<div style="font-weight:600;font-size:14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">' +
+      '<span>Досягнення (' + earnedCount + '/' + totalCount + ')</span>' +
+      '<a style="font-size:12px;cursor:pointer;color:var(--accent);" onclick="navigateTo(\'badges\')">Всі досягнення &rarr;</a>' +
+    '</div>';
+
+    html += '<div class="card"><div class="card-body" style="padding:16px;">' +
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;">';
+
+    defs.forEach(function(d) {
+      var isEarned = earnedIds.indexOf(d.id) >= 0;
+      html += '<div style="width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;' +
+        (isEarned ? 'background:' + d.color + '15;border:1px solid ' + d.color + '30;' : 'background:var(--bg-warm);filter:grayscale(1);opacity:0.3;') +
+        '" title="' + d.name + '">' + d.icon + '</div>';
+    });
+
+    html += '</div></div></div>';
+    container.innerHTML = html;
+
+    // Автоперевірка бейджів при кожному відкритті дашборду
+    if (typeof checkAndAwardBadges === 'function') {
+      checkAndAwardBadges(user.id);
+    }
+  } catch(e) {
+    container.innerHTML = '';
+  }
+}
+
+// --- Новини на дашборді ---
+async function loadDashNews() {
+  var container = document.getElementById('dash-news');
+  if (!container) return;
+
+  try {
+    var result = await db.from('news').select('id, title, content, published_at')
+      .eq('is_published', true).order('published_at', { ascending: false }).limit(3);
+
+    var items = result.data || [];
+    if (items.length === 0) { container.innerHTML = ''; return; }
+
+    var html = '<div style="font-weight:600;font-size:14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">' +
+      '<span>Новини</span>' +
+      '<a style="font-size:12px;cursor:pointer;color:var(--accent);" onclick="navigateTo(\'news\')">Всі новини →</a>' +
+    '</div>';
+
+    items.forEach(function(n) {
+      var date = n.published_at ? new Date(n.published_at).toLocaleDateString('uk-UA') : '';
+      var preview = n.content.length > 120 ? n.content.substring(0, 120) + '...' : n.content;
+
+      html += '<div class="card" style="margin-bottom:8px;border-left:3px solid var(--accent);"><div class="card-body" style="padding:12px 16px;">' +
+        '<div style="font-weight:600;font-size:14px;margin-bottom:4px;">' + n.title + '</div>' +
+        '<div style="font-size:13px;color:var(--text-secondary);line-height:1.4;">' + preview + '</div>' +
+        '<div style="font-size:11px;color:var(--text-muted);margin-top:6px;">' + date + '</div>' +
+      '</div></div>';
+    });
+
+    container.innerHTML = html;
+  } catch(e) {
+    container.innerHTML = '';
+  }
 }
 
 // --- Останні заходи ---
