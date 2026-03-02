@@ -1,4 +1,4 @@
-// pages/users.js — Управління користувачами (admin) — оновлено
+// pages/users.js — Управління користувачами (admin) — з деактивацією
 
 registerPage('users', {
   render: function(user) {
@@ -13,12 +13,16 @@ registerPage('users', {
             '<h2 style="font-size:20px;">Користувачі</h2>' +
             '<p style="color:var(--text-muted);font-size:14px;">Управління акаунтами системи</p>' +
           '</div>' +
-          '<button class="btn btn-primary" onclick="openCreateUser()">+ Додати користувача</button>' +
+          '<div style="display:flex;gap:8px;align-items:center;">' +
+            '<label style="font-size:13px;color:var(--text-muted);display:flex;align-items:center;gap:4px;cursor:pointer;">' +
+              '<input type="checkbox" id="show-inactive-users" onchange="loadUsers()"> Показати деактивованих' +
+            '</label>' +
+            '<button class="btn btn-primary" onclick="openCreateUser()">+ Додати користувача</button>' +
+          '</div>' +
         '</div>' +
         '<div id="users-list">Завантаження...</div>' +
       '</div>' +
 
-      // Модальне вікно редагування
       '<div id="user-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;padding:20px;overflow-y:auto;">' +
         '<div style="max-width:480px;margin:40px auto;background:var(--bg-card);border-radius:var(--r4);padding:28px;position:relative;">' +
           '<button onclick="closeUserModal()" style="position:absolute;top:12px;right:12px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-muted);">✕</button>' +
@@ -28,9 +32,7 @@ registerPage('users', {
   },
 
   init: async function(user) {
-    if (user.role === 'admin') {
-      await loadUsers();
-    }
+    if (user.role === 'admin') await loadUsers();
   }
 });
 
@@ -42,17 +44,17 @@ async function loadUsers() {
 
   container.innerHTML = '<div style="text-align:center;padding:20px;"><span class="spinner"></span></div>';
 
-  var result = await db
-    .from('profiles')
-    .select('*, departments(name, short_name)')
-    .order('full_name');
+  var showInactive = document.getElementById('show-inactive-users');
+  var includeInactive = showInactive && showInactive.checked;
 
-  // Завантажити підрозділи для форм
-  var deptResult = await db.from('departments')
-    .select('id, name, short_name, type')
-    .eq('is_active', true)
-    .order('type, name');
+  var query = db.from('profiles').select('*, departments(name, short_name)').order('full_name');
+  if (!includeInactive) {
+    query = query.eq('is_active', true);
+  }
 
+  var result = await query;
+
+  var deptResult = await db.from('departments').select('id, name, short_name, type').eq('is_active', true).order('type, name');
   allDepartments = deptResult.data || [];
 
   if (result.error) {
@@ -63,9 +65,7 @@ async function loadUsers() {
   var users = result.data || [];
 
   if (users.length === 0) {
-    container.innerHTML = '<div class="card"><div class="card-body" style="text-align:center;padding:40px;">' +
-      '<p style="color:var(--text-muted);">Користувачів не знайдено</p>' +
-    '</div></div>';
+    container.innerHTML = '<div class="card"><div class="card-body" style="text-align:center;padding:40px;color:var(--text-muted);">Користувачів не знайдено</div></div>';
     return;
   }
 
@@ -75,7 +75,7 @@ async function loadUsers() {
         '<th style="padding:12px 16px;text-align:left;font-weight:600;color:var(--text-muted);font-size:12px;">ПІБ</th>' +
         '<th style="padding:12px 16px;text-align:left;font-weight:600;color:var(--text-muted);font-size:12px;">Роль</th>' +
         '<th style="padding:12px 16px;text-align:left;font-weight:600;color:var(--text-muted);font-size:12px;">Підрозділ</th>' +
-        '<th style="padding:12px 16px;text-align:left;font-weight:600;color:var(--text-muted);font-size:12px;">Посада</th>' +
+        '<th style="padding:12px 16px;text-align:left;font-weight:600;color:var(--text-muted);font-size:12px;">Статус</th>' +
         '<th style="padding:12px 16px;text-align:center;font-weight:600;color:var(--text-muted);font-size:12px;">Дії</th>' +
       '</tr></thead><tbody>';
 
@@ -86,18 +86,30 @@ async function loadUsers() {
     var deptName = u.departments ? u.departments.short_name : '—';
     var roleName = roleLabels[u.role] || u.role;
     var roleColor = roleColors[u.role] || 'var(--text-secondary)';
+    var isActive = u.is_active !== false;
+    var rowStyle = isActive ? '' : 'opacity:0.5;';
 
-    html += '<tr style="border-bottom:1px solid var(--border-light);">' +
+    html += '<tr style="border-bottom:1px solid var(--border-light);' + rowStyle + '">' +
       '<td style="padding:12px 16px;">' +
         '<div style="font-weight:600;">' + u.full_name + '</div>' +
+        '<div style="font-size:12px;color:var(--text-muted);">' + (u.position || '') + '</div>' +
       '</td>' +
       '<td style="padding:12px 16px;">' +
         '<span style="font-size:12px;font-weight:600;color:' + roleColor + ';background:' + roleColor + '15;padding:3px 8px;border-radius:6px;">' + roleName + '</span>' +
       '</td>' +
       '<td style="padding:12px 16px;color:var(--text-secondary);">' + deptName + '</td>' +
-      '<td style="padding:12px 16px;color:var(--text-secondary);font-size:13px;">' + (u.position || '—') + '</td>' +
+      '<td style="padding:12px 16px;">' +
+        (isActive
+          ? '<span style="font-size:12px;color:var(--green);">Активний</span>'
+          : '<span style="font-size:12px;color:var(--red);">Деактивований</span>') +
+      '</td>' +
       '<td style="padding:12px 16px;text-align:center;">' +
-        '<button class="btn btn-secondary" style="font-size:12px;padding:4px 12px;" onclick="openEditUser(\'' + u.id + '\')">Редагувати</button>' +
+        '<div style="display:flex;gap:6px;justify-content:center;">' +
+          '<button class="btn btn-secondary" style="font-size:12px;padding:4px 10px;" onclick="openEditUser(\'' + u.id + '\')">Редагувати</button>' +
+          (isActive
+            ? '<button class="btn btn-secondary" style="font-size:12px;padding:4px 10px;color:var(--red);border-color:var(--red);" onclick="deactivateUser(\'' + u.id + '\',\'' + u.full_name.replace(/'/g, "\\'") + '\')">Деактивувати</button>'
+            : '<button class="btn btn-secondary" style="font-size:12px;padding:4px 10px;color:var(--green);border-color:var(--green);" onclick="reactivateUser(\'' + u.id + '\')">Активувати</button>') +
+        '</div>' +
       '</td>' +
     '</tr>';
   });
@@ -105,6 +117,41 @@ async function loadUsers() {
   html += '</tbody></table></div></div>';
   container.innerHTML = html;
 }
+
+// === ДЕАКТИВАЦІЯ / АКТИВАЦІЯ ===
+
+async function deactivateUser(userId, userName) {
+  if (userId === currentUser.id) {
+    alert('Ви не можете деактивувати власний акаунт');
+    return;
+  }
+
+  if (!confirm('Деактивувати користувача ' + userName + '?\n\nКористувач не зможе увійти в систему.\nВсі його заходи та бали збережуться в рейтингу.')) {
+    return;
+  }
+
+  var result = await db.from('profiles').update({ is_active: false }).eq('id', userId);
+
+  if (result.error) {
+    alert('Помилка: ' + result.error.message);
+    return;
+  }
+
+  loadUsers();
+}
+
+async function reactivateUser(userId) {
+  var result = await db.from('profiles').update({ is_active: true }).eq('id', userId);
+
+  if (result.error) {
+    alert('Помилка: ' + result.error.message);
+    return;
+  }
+
+  loadUsers();
+}
+
+// === СТВОРЕННЯ КОРИСТУВАЧА ===
 
 function buildDeptOptions(selectedId) {
   var options = '';
@@ -125,8 +172,6 @@ function buildDeptOptions(selectedId) {
   return options;
 }
 
-// === СТВОРЕННЯ НОВОГО КОРИСТУВАЧА ===
-
 function openCreateUser() {
   var modal = document.getElementById('user-modal');
   var content = document.getElementById('user-modal-content');
@@ -142,10 +187,10 @@ function openCreateUser() {
     '<div class="form-group">' +
       '<label class="form-label">Пароль</label>' +
       '<div style="display:flex;gap:8px;">' +
-        '<input class="form-input" id="new-user-password" type="text" value="" style="flex:1;">' +
+        '<input class="form-input" id="new-user-password" type="text" style="flex:1;">' +
         '<button class="btn btn-secondary" onclick="generatePassword()" style="white-space:nowrap;font-size:12px;">Згенерувати</button>' +
       '</div>' +
-      '<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Мінімум 6 символів. Передайте користувачу для входу.</div>' +
+      '<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Мінімум 6 символів. Запишіть та передайте користувачу.</div>' +
     '</div>' +
 
     '<div class="form-group">' +
@@ -170,9 +215,7 @@ function openCreateUser() {
 
     '<div class="form-group">' +
       '<label class="form-label">Підрозділ</label>' +
-      '<select class="form-input" id="new-user-dept">' +
-        buildDeptOptions(null) +
-      '</select>' +
+      '<select class="form-input" id="new-user-dept">' + buildDeptOptions(null) + '</select>' +
     '</div>' +
 
     '<div id="create-user-error" style="display:none;padding:10px;background:var(--red-soft);color:var(--red);border-radius:var(--r2);font-size:13px;margin-bottom:12px;"></div>' +
@@ -189,9 +232,7 @@ function openCreateUser() {
 function generatePassword() {
   var chars = 'abcdefghjkmnpqrstuvwxyz23456789';
   var pass = '';
-  for (var i = 0; i < 8; i++) {
-    pass += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
+  for (var i = 0; i < 8; i++) pass += chars.charAt(Math.floor(Math.random() * chars.length));
   document.getElementById('new-user-password').value = pass;
 }
 
@@ -213,21 +254,15 @@ async function createUser() {
     errorDiv.style.display = 'block';
     return;
   }
-
   if (password.length < 6) {
     errorDiv.textContent = 'Пароль має бути мінімум 6 символів';
     errorDiv.style.display = 'block';
     return;
   }
 
-  // Викликаємо серверну функцію
   var result = await db.rpc('admin_create_user', {
-    p_email: email,
-    p_password: password,
-    p_full_name: fullName,
-    p_position: position,
-    p_role: role,
-    p_department_id: departmentId
+    p_email: email, p_password: password, p_full_name: fullName,
+    p_position: position, p_role: role, p_department_id: departmentId
   });
 
   if (result.error) {
@@ -243,16 +278,12 @@ async function createUser() {
     return;
   }
 
-  successDiv.innerHTML = 'Користувача створено! Дані для входу:<br>' +
-    'Email: <span style="font-weight:600;">' + email + '</span><br>' +
-    'Пароль: <span style="font-weight:600;">' + password + '</span>';
+  successDiv.innerHTML = 'Користувача створено!<br>Email: <span style="font-weight:600;">' + email + '</span><br>Пароль: <span style="font-weight:600;">' + password + '</span>';
   successDiv.style.display = 'block';
-
-  // Оновити список
   await loadUsers();
 }
 
-// === РЕДАГУВАННЯ КОРИСТУВАЧА ===
+// === РЕДАГУВАННЯ ===
 
 async function openEditUser(userId) {
   var modal = document.getElementById('user-modal');
@@ -260,11 +291,7 @@ async function openEditUser(userId) {
   modal.style.display = 'block';
   content.innerHTML = '<div style="text-align:center;padding:20px;"><span class="spinner"></span></div>';
 
-  var userResult = await db.from('profiles')
-    .select('*, departments(name, short_name)')
-    .eq('id', userId)
-    .single();
-
+  var userResult = await db.from('profiles').select('*').eq('id', userId).single();
   if (userResult.error || !userResult.data) {
     content.innerHTML = '<div class="alert alert-error">Помилка завантаження</div>';
     return;
@@ -273,34 +300,15 @@ async function openEditUser(userId) {
   var u = userResult.data;
 
   content.innerHTML = '<h3 style="font-size:18px;margin-bottom:20px;">Редагувати користувача</h3>' +
-
-    '<div class="form-group">' +
-      '<label class="form-label">ПІБ</label>' +
-      '<input class="form-input" id="edit-user-name" value="' + (u.full_name || '') + '">' +
-    '</div>' +
-
-    '<div class="form-group">' +
-      '<label class="form-label">Посада</label>' +
-      '<input class="form-input" id="edit-user-position" value="' + (u.position || '') + '">' +
-    '</div>' +
-
-    '<div class="form-group">' +
-      '<label class="form-label">Роль</label>' +
-      '<select class="form-input" id="edit-user-role">' +
-        '<option value="participant"' + (u.role === 'participant' ? ' selected' : '') + '>Учасник</option>' +
-        '<option value="verifier"' + (u.role === 'verifier' ? ' selected' : '') + '>Верифікатор</option>' +
-        '<option value="rectorate"' + (u.role === 'rectorate' ? ' selected' : '') + '>Ректорат</option>' +
-        '<option value="admin"' + (u.role === 'admin' ? ' selected' : '') + '>Адміністратор</option>' +
-      '</select>' +
-    '</div>' +
-
-    '<div class="form-group">' +
-      '<label class="form-label">Підрозділ</label>' +
-      '<select class="form-input" id="edit-user-dept">' +
-        buildDeptOptions(u.department_id) +
-      '</select>' +
-    '</div>' +
-
+    '<div class="form-group"><label class="form-label">ПІБ</label><input class="form-input" id="edit-user-name" value="' + (u.full_name || '') + '"></div>' +
+    '<div class="form-group"><label class="form-label">Посада</label><input class="form-input" id="edit-user-position" value="' + (u.position || '') + '"></div>' +
+    '<div class="form-group"><label class="form-label">Роль</label><select class="form-input" id="edit-user-role">' +
+      '<option value="participant"' + (u.role === 'participant' ? ' selected' : '') + '>Учасник</option>' +
+      '<option value="verifier"' + (u.role === 'verifier' ? ' selected' : '') + '>Верифікатор</option>' +
+      '<option value="rectorate"' + (u.role === 'rectorate' ? ' selected' : '') + '>Ректорат</option>' +
+      '<option value="admin"' + (u.role === 'admin' ? ' selected' : '') + '>Адміністратор</option>' +
+    '</select></div>' +
+    '<div class="form-group"><label class="form-label">Підрозділ</label><select class="form-input" id="edit-user-dept">' + buildDeptOptions(u.department_id) + '</select></div>' +
     '<div style="display:flex;gap:10px;margin-top:20px;">' +
       '<button class="btn btn-primary" style="flex:1;" onclick="saveUser(\'' + u.id + '\')">Зберегти</button>' +
       '<button class="btn btn-secondary" style="flex:1;" onclick="closeUserModal()">Скасувати</button>' +
@@ -314,21 +322,10 @@ async function saveUser(userId) {
     role: document.getElementById('edit-user-role').value,
     department_id: document.getElementById('edit-user-dept').value
   };
+  if (!data.full_name) { alert('Вкажіть ПІБ'); return; }
 
-  if (!data.full_name) {
-    alert('Вкажіть ПІБ');
-    return;
-  }
-
-  var result = await db
-    .from('profiles')
-    .update(data)
-    .eq('id', userId);
-
-  if (result.error) {
-    alert('Помилка: ' + result.error.message);
-    return;
-  }
+  var result = await db.from('profiles').update(data).eq('id', userId);
+  if (result.error) { alert('Помилка: ' + result.error.message); return; }
 
   closeUserModal();
   loadUsers();

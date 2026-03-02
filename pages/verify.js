@@ -150,6 +150,31 @@ async function openVerifyDetail(activityId) {
       detailRow('Попередній бал', '<span style="font-weight:700;color:var(--accent-deep);">' + (a.preliminary_score || 0) + '</span>') +
     '</div>';
 
+  // Завантажити та показати вкладення
+  try {
+    var attResult = await db.from('attachments').select('*').eq('entity_id', activityId).eq('entity_type', 'activity');
+    var attachments = attResult.data || [];
+    if (attachments.length > 0) {
+      var projectUrl = SUPABASE_URL;
+      html += '<div style="margin-bottom:16px;">' +
+        '<div style="font-size:13px;font-weight:600;color:var(--text-muted);margin-bottom:8px;">Прикріплені файли (' + attachments.length + ')</div>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;">';
+      attachments.forEach(function(att) {
+        var url = projectUrl + '/storage/v1/object/public/activity-files/' + att.file_path;
+        var isImage = att.file_type === 'event_photo' || att.file_name.match(/\.(jpg|jpeg|png|webp)$/i);
+        if (isImage) {
+          html += '<a href="' + url + '" target="_blank" style="display:block;width:100px;height:100px;border-radius:8px;overflow:hidden;border:1px solid var(--border-light);">' +
+            '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover;">' +
+          '</a>';
+        } else {
+          html += '<a href="' + url + '" target="_blank" style="display:flex;align-items:center;gap:6px;padding:8px 12px;border:1px solid var(--border-light);border-radius:8px;font-size:12px;color:var(--text-secondary);text-decoration:none;">' +
+            '📄 ' + att.file_name + '</a>';
+        }
+      });
+      html += '</div></div>';
+    }
+  } catch(e) {}
+
   if (a.status === 'submitted') {
     html += '<div style="border-top:1px solid var(--border);padding-top:16px;">' +
       '<div style="margin-bottom:12px;">' +

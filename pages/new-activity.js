@@ -315,6 +315,18 @@ function stepDetails() {
     '<textarea class="form-textarea" id="notes" placeholder="Додаткова інформація..." onchange="wizardData.notes=this.value">' + (wizardData.notes || '') + '</textarea>' +
   '</div>' +
 
+  // Фото/докази
+  '<div style="border-top:1px solid var(--border-light);padding-top:16px;margin-top:8px;">' +
+    '<div style="font-size:13px;font-weight:600;color:var(--text-muted);margin-bottom:10px;">Фото / докази (необов\'язково)</div>' +
+    '<div id="photo-previews" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;"></div>' +
+    '<label style="display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border:2px dashed var(--border);border-radius:10px;cursor:pointer;font-size:13px;color:var(--text-muted);transition:border-color 0.15s;" ' +
+      'onmouseover="this.style.borderColor=\'var(--accent)\'" onmouseout="this.style.borderColor=\'var(--border)\'">' +
+      '<span style="font-size:20px;">📎</span> Додати файли (фото, PDF)' +
+      '<input type="file" id="photo-input" multiple accept="image/*,.pdf" style="display:none;" onchange="handlePhotoSelect(this)">' +
+    '</label>' +
+    '<div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Макс. 5 МБ на файл. JPG, PNG, PDF.</div>' +
+  '</div>' +
+
   // Попередній бал
   '<div class="score-preview" id="score-preview">' +
     '<div>' +
@@ -385,6 +397,9 @@ function stepReview() {
   if (wizardData.notes) {
     html += reviewRow('Примітка', wizardData.notes);
   }
+  if (pendingFiles.length > 0) {
+    html += reviewRow('Фото/докази', pendingFiles.length + ' файл(ів)');
+  }
 
   html += '</div>';
 
@@ -446,6 +461,98 @@ function wizardPrev() {
   }
 }
 
+// ===== ФОТО =====
+var pendingFiles = [];
+
+function handlePhotoSelect(input) {
+  var files = Array.from(input.files);
+  files.forEach(function(f) {
+    if (f.size > 5 * 1024 * 1024) {
+      alert('Файл ' + f.name + ' перевищує 5 МБ');
+      return;
+    }
+    pendingFiles.push(f);
+  });
+  renderPhotoPreviews();
+  input.value = '';
+}
+
+function removePhoto(index) {
+  pendingFiles.splice(index, 1);
+  renderPhotoPreviews();
+}
+
+function renderPhotoPreviews() {
+  var container = document.getElementById('photo-previews');
+  if (!container) return;
+  if (pendingFiles.length === 0) { container.innerHTML = ''; return; }
+
+  var html = '';
+  pendingFiles.forEach(function(f, i) {
+    var isImage = f.type.startsWith('image/');
+    html += '<div style="position:relative;width:80px;height:80px;border-radius:8px;overflow:hidden;border:1px solid var(--border-light);background:var(--bg-warm);display:flex;align-items:center;justify-content:center;">';
+    if (isImage) {
+      html += '<img src="' + URL.createObjectURL(f) + '" style="width:100%;height:100%;object-fit:cover;">';
+    } else {
+      html += '<span style="font-size:11px;text-align:center;padding:4px;color:var(--text-muted);">PDF<br>' + f.name.substring(0, 10) + '</span>';
+    }
+    html += '<button onclick="removePhoto(' + i + ')" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:12px;cursor:pointer;line-height:20px;text-align:center;">×</button>';
+    html += '</div>';
+  });
+  container.innerHTML = html;
+}
+
+async function uploadFiles(activityId) {
+  if (pendingFiles.length === 0) return;
+
+  for (var i = 0; i < pendingFiles.length; i++) {
+    var f = pendingFiles[i];
+    var ext = f.name.split('.').pop().toLowerCase();
+    var path = activityId + '/' + Date.now() + '_' + i + '.' + ext;
+
+    var uploadResult = await db.storage.from('activity-files').upload(path, f);
+    if (uploadResult.error) {
+      console.error('Upload error:', uploadResult.error);
+      continue;
+    }
+
+    await db.from('attachments').insert({
+      entity_type: 'activity',
+      entity_id: activityId,
+      file_path: path,
+      file_name: f.name,
+      file_type: f.type.startsWith('image/') ? 'event_photo' : 'document',
+      uploaded_by: wizardData.created_by
+    });
+  }
+}
+
+// ===== АНТИДУБЛЮВАННЯ =====
+async function checkDuplicate() {
+  var filters = {
+    department_id: wizardData.department_id,
+    activity_type_id: wizardData.activity_type_id,
+    event_date: wizardData.event_date || today()
+  };
+
+  var query = db.from('activities')
+    .select('id, event_date, institutions(name), custom_institution_name, status')
+    .eq('department_id', filters.department_id)
+    .eq('activity_type_id', filters.activity_type_id)
+    .eq('event_date', filters.event_date);
+
+  if (wizardData.institution_id) {
+    query = query.eq('institution_id', wizardData.institution_id);
+  }
+
+  var result = await query;
+  if (result.error || !result.data || result.data.length === 0) {
+    return null;
+  }
+
+  return result.data[0];
+}
+
 // ===== ЗБЕРЕЖЕННЯ =====
 async function saveDraft() {
   await saveActivity('draft');
@@ -458,6 +565,23 @@ async function submitActivity() {
 async function saveActivity(status) {
   var btn = event.target || document.querySelector('#wizard-nav .btn');
   if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>'; }
+
+  // Перевірка на дублікат
+  var duplicate = await checkDuplicate();
+  if (duplicate) {
+    var instName = duplicate.institutions ? duplicate.institutions.name : (duplicate.custom_institution_name || '');
+    var statusLabel = { draft: 'чернетка', submitted: 'на перевірці', verified: 'підтверджений', rejected: 'відхилений' };
+    var msg = 'Знайдено схожий захід:\n\n' +
+      'Дата: ' + formatDate(duplicate.event_date) + '\n' +
+      (instName ? 'Заклад: ' + instName + '\n' : '') +
+      'Статус: ' + (statusLabel[duplicate.status] || duplicate.status) + '\n\n' +
+      'Створити окремий запис все одно?';
+
+    if (!confirm(msg)) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Спробувати ще'; }
+      return;
+    }
+  }
 
   var record = {
     department_id: wizardData.department_id,
@@ -488,8 +612,15 @@ async function saveActivity(status) {
     return;
   }
 
-  // Успіх — перейти на список заходів
+  // Завантажити фото (якщо є)
+  if (pendingFiles.length > 0 && result.data) {
+    if (btn) btn.innerHTML = '<span class="spinner"></span> Завантаження файлів...';
+    await uploadFiles(result.data.id);
+  }
+
+  // Успіх
+  pendingFiles = [];
   var msg = status === 'submitted' ? 'подано на перевірку' : 'збережено як чернетку';
-  alert('Захід успішно ' + msg + '!');
+  alert('Захід успішно ' + msg + '!' + (pendingFiles.length > 0 ? '' : ''));
   navigateTo('activities');
 }
